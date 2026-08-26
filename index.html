@@ -356,7 +356,7 @@
         note:"Outil en cours de développement, tarif pas encore arrêté."}
     ],
     recurrent: [
-      {id:"redevance_reseau", label:"Redevance réseau", statut:"Obligatoire", unit:"6 % CA HT (mini 650 €HT/mois)", revente:null, achat:null, variable:true,
+      {id:"redevance_reseau", label:"Redevance réseau", statut:"Obligatoire", unit:"€HT/mois", revente:"6 % CA HT (mini 650 €HT/mois)", achat:"",
         note:"Royauté de marque assise sur le CA du franchisé : pas de prestataire externe."},
       {id:"plancher12", label:"Plancher royalties an 1 & 2", statut:"Obligatoire", unit:"€HT/an", revente:8500, achat:null,
         note:"Montant plancher garanti (remplace le 6 % si celui-ci est inférieur)."},
@@ -372,7 +372,7 @@
         note:"Abonnement logiciel (ex. Smoobu/Beds24) + commission réservations."},
       {id:"cm_6_10", label:"Channel manager (6–10 logements)", statut:"Selon parc géré", unit:"€HT/mois + 3,5 % résa", revente:50, achat:0, annualize:12,
         note:"Palier intermédiaire."},
-      {id:"cm_11p", label:"Channel manager (11+ logements)", statut:"Selon parc géré", unit:"3,5 % résa uniquement", revente:null, achat:null, variable:true,
+      {id:"cm_11p", label:"Channel manager (11+ logements)", statut:"Selon parc géré", unit:"€HT/mois", revente:"3,5 % résa uniquement", achat:"",
         note:"Au-delà de 10 logements : plus de forfait fixe, uniquement la commission."},
       {id:"lead", label:"Lead propriétaire closé", statut:"Nouvelle ligne variable", unit:"€ / deal", revente:150, achat:0,
         note:"Coût = dépense marketing/acquisition moyenne par lead."}
@@ -427,21 +427,36 @@
   }
 
   function rowById(section, id){ return state[section].find(r=>r.id===id); }
+
+  // A cell is numeric only if it's a plain number (possibly with a comma decimal) —
+  // anything with %, +, text, etc. is treated as a descriptive formula, not a computable amount.
+  function parseNumeric(v){
+    if(v===null || v===undefined) return null;
+    if(typeof v === "number") return isNaN(v) ? null : v;
+    const s = String(v).trim();
+    if(s==="") return null;
+    const normalized = s.replace(",", ".");
+    return /^-?\d+(\.\d+)?$/.test(normalized) ? parseFloat(normalized) : null;
+  }
+
   function g(section, id, field, fallback){
     const r = rowById(section, id);
     if(!r) return fallback;
-    const v = r[field];
-    return (typeof v === "number") ? v : fallback;
+    const n = parseNumeric(r[field]);
+    return n===null ? fallback : n;
   }
 
   function marginOf(row){
-    if(row.variable || row.achat===null || row.achat===undefined || row.revente===null || row.revente===undefined) return null;
-    return row.revente - row.achat;
+    const rev = parseNumeric(row.revente);
+    const ach = parseNumeric(row.achat);
+    if(rev===null || ach===null) return null;
+    return rev - ach;
   }
   function marginPctOf(row){
     const m = marginOf(row);
-    if(m===null || !row.revente) return null;
-    return m / row.revente;
+    const rev = parseNumeric(row.revente);
+    if(m===null || !rev) return null;
+    return m / rev;
   }
 
   let uidCounter = 1;
@@ -464,39 +479,30 @@
       tdPoste.appendChild(nameInp); tdPoste.appendChild(unitInp);
       tr.appendChild(tdPoste);
 
-      // ---- Prix de revente ----
+      // ---- Prix de revente (texte libre : montant, ou formule type "2,5 % + 2,70 €/logement") ----
       const tdRevente = document.createElement("td");
       tdRevente.className = "num";
-      if(row.variable){
-        tdRevente.innerHTML = `<span class="na-text">variable</span>`;
-      } else {
-        const inp = document.createElement("input");
-        inp.type = "number"; inp.className = "cell-input"; inp.step = "1";
-        inp.value = row.revente ?? 0;
-        inp.addEventListener("input", ()=>{
-          row.revente = inp.value === "" ? 0 : parseFloat(inp.value);
-          recompute(); persist();
-        });
-        tdRevente.appendChild(inp);
-      }
+      const reventeInp = document.createElement("input");
+      reventeInp.type = "text"; reventeInp.className = "cell-input"; reventeInp.placeholder = "N/A";
+      reventeInp.value = (row.revente===null || row.revente===undefined) ? "" : row.revente;
+      reventeInp.addEventListener("input", ()=>{
+        row.revente = reventeInp.value === "" ? null : reventeInp.value;
+        recompute(); persist();
+      });
+      tdRevente.appendChild(reventeInp);
       tr.appendChild(tdRevente);
 
-      // ---- Prix d'achat ----
+      // ---- Prix d'achat (texte libre également) ----
       const tdAchat = document.createElement("td");
       tdAchat.className = "num";
-      if(row.variable){
-        tdAchat.innerHTML = `<span class="na-text">N/A</span>`;
-      } else {
-        const inp = document.createElement("input");
-        inp.type = "number"; inp.className = "cell-input"; inp.step = "1";
-        inp.placeholder = "N/A";
-        inp.value = (row.achat===null || row.achat===undefined) ? "" : row.achat;
-        inp.addEventListener("input", ()=>{
-          row.achat = inp.value === "" ? null : parseFloat(inp.value);
-          recompute(); persist();
-        });
-        tdAchat.appendChild(inp);
-      }
+      const achatInp = document.createElement("input");
+      achatInp.type = "text"; achatInp.className = "cell-input"; achatInp.placeholder = "N/A";
+      achatInp.value = (row.achat===null || row.achat===undefined) ? "" : row.achat;
+      achatInp.addEventListener("input", ()=>{
+        row.achat = achatInp.value === "" ? null : achatInp.value;
+        recompute(); persist();
+      });
+      tdAchat.appendChild(achatInp);
       tr.appendChild(tdAchat);
 
       const tdMargeE = document.createElement("td"); tdMargeE.className = "num margin-e"; tr.appendChild(tdMargeE);
@@ -535,7 +541,7 @@
       if(!row._el) return;
       const m = marginOf(row);
       const p = marginPctOf(row);
-      if(row.variable || m===null){
+      if(m===null){
         row._el.margeE.innerHTML = `<span class="na-text">N/A</span>`;
         row._el.margeP.innerHTML = `<span class="na-text">N/A</span>`;
       } else {
@@ -749,17 +755,17 @@
     const recMarge = state.recurrent.reduce((s,r)=> s + ((marginOf(r) || 0) * (r.annualize || 1)), 0);
     document.getElementById("kpi-marge-rec").textContent = fmtEUR(recMarge);
 
-    // ---- Totals row: one-shot table ----
-    const osRevente = state.oneshot.reduce((s,r)=> s + (r.variable ? 0 : (r.revente || 0)), 0);
-    const osAchat = state.oneshot.reduce((s,r)=> s + (r.variable || r.achat===null || r.achat===undefined ? 0 : r.achat), 0);
+    // ---- Totals row: one-shot table (lignes en formule/% ignorées, comme non chiffrables) ----
+    const osRevente = state.oneshot.reduce((s,r)=> s + (parseNumeric(r.revente) || 0), 0);
+    const osAchat = state.oneshot.reduce((s,r)=> s + (parseNumeric(r.achat) || 0), 0);
     document.getElementById("os-total-revente").textContent = fmtEUR(osRevente);
     document.getElementById("os-total-achat").textContent = fmtEUR(osAchat);
     document.getElementById("os-total-marge").textContent = fmtEUR(osMarge);
     document.getElementById("os-total-margepct").textContent = osRevente ? fmtPct(osMarge/osRevente) : "—";
 
-    // ---- Totals row: recurrent table (annualized, excludes % CA lines) ----
-    const recRevente = state.recurrent.reduce((s,r)=> s + (r.variable ? 0 : (r.revente || 0) * (r.annualize || 1)), 0);
-    const recAchat = state.recurrent.reduce((s,r)=> s + (r.variable || r.achat===null || r.achat===undefined ? 0 : r.achat * (r.annualize || 1)), 0);
+    // ---- Totals row: recurrent table (annualized, lignes en formule/% ignorées) ----
+    const recRevente = state.recurrent.reduce((s,r)=> s + (parseNumeric(r.revente) || 0) * (r.annualize || 1), 0);
+    const recAchat = state.recurrent.reduce((s,r)=> s + (parseNumeric(r.achat) || 0) * (r.annualize || 1), 0);
     document.getElementById("rec-total-revente").textContent = fmtEUR(recRevente);
     document.getElementById("rec-total-achat").textContent = fmtEUR(recAchat);
     document.getElementById("rec-total-marge").textContent = fmtEUR(recMarge);
