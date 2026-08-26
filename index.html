@@ -48,10 +48,11 @@
 
   .savebar{
     position:sticky; top:0; z-index:20;
-    display:flex; align-items:center; justify-content:flex-end; gap:14px;
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
     padding:10px 24px; background:var(--surface); border-bottom:1px solid var(--border);
     box-shadow:var(--shadow);
   }
+  .savebar-right{display:flex; align-items:center; gap:14px;}
   .save-status{
     font-size:0.78rem; color:var(--ink-muted); font-family:"IBM Plex Mono", monospace;
     transition:color 0.2s ease;
@@ -65,8 +66,14 @@
   button.btn-save:hover{background:var(--accent-strong);}
   button.btn-save:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
   button.btn-save.just-saved{background:var(--positive); border-color:var(--positive);}
+  button.btn-theme{
+    width:38px; height:38px; border-radius:7px; border:1px solid var(--border-strong);
+    background:var(--surface); color:var(--ink); font-size:1.05rem; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  button.btn-theme:hover{border-color:var(--accent);}
+  button.btn-theme:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
   @media (max-width:600px){
-    .savebar{justify-content:space-between;}
     .save-status{display:none;}
   }
 
@@ -209,8 +216,11 @@
 </style>
 
 <div class="savebar" id="savebar">
-  <span class="save-status" id="save-status">Modifications enregistrées automatiquement dans ce navigateur.</span>
-  <button class="btn-save" id="save-btn" type="button">Enregistrer les modifications</button>
+  <button class="btn-theme" id="theme-toggle" type="button" aria-label="Basculer entre thème clair et sombre">🌙</button>
+  <div class="savebar-right">
+    <span class="save-status" id="save-status">Modifications enregistrées automatiquement dans ce navigateur.</span>
+    <button class="btn-save" id="save-btn" type="button">Enregistrer les modifications</button>
+  </div>
 </div>
 
 <div class="wrap">
@@ -242,6 +252,14 @@
           <th class="num">Marge €</th><th class="num">Marge %</th><th>Note</th><th class="actions-col"></th>
         </tr></thead>
         <tbody></tbody>
+        <tfoot><tr>
+          <td>Total one-shot</td>
+          <td class="num" id="os-total-revente">—</td>
+          <td class="num" id="os-total-achat">—</td>
+          <td class="num" id="os-total-marge">—</td>
+          <td class="num" id="os-total-margepct">—</td>
+          <td></td><td></td>
+        </tr></tfoot>
       </table>
     </div>
     <div class="add-row-bar"><button class="btn-add" type="button" data-section="oneshot">+ Ajouter une ligne one-shot</button></div>
@@ -259,10 +277,20 @@
           <th class="num">Marge €</th><th class="num">Marge %</th><th>Note</th><th class="actions-col"></th>
         </tr></thead>
         <tbody></tbody>
-        <tfoot><tr>
-          <td colspan="4">Total charges fixes obligatoires an 1&nbsp;&amp;&nbsp;2 <span style="font-weight:400;color:var(--ink-muted);">(plancher + marketing + community mgmt + maintenance)</span></td>
-          <td class="num" id="total-fixe-an12">—</td><td></td>
-        </tr></tfoot>
+        <tfoot>
+          <tr>
+            <td colspan="4">Total charges fixes obligatoires an 1&nbsp;&amp;&nbsp;2 <span style="font-weight:400;color:var(--ink-muted);">(plancher + marketing + community mgmt + maintenance)</span></td>
+            <td class="num" id="total-fixe-an12">—</td><td></td>
+          </tr>
+          <tr>
+            <td>Total récurrent annualisé <span style="font-weight:400;color:var(--ink-muted);">(hors lignes % CA)</span></td>
+            <td class="num" id="rec-total-revente">—</td>
+            <td class="num" id="rec-total-achat">—</td>
+            <td class="num" id="rec-total-marge">—</td>
+            <td class="num" id="rec-total-margepct">—</td>
+            <td></td><td></td>
+          </tr>
+        </tfoot>
       </table>
     </div>
     <div class="add-row-bar"><button class="btn-add" type="button" data-section="recurrent">+ Ajouter une ligne récurrente</button></div>
@@ -721,9 +749,53 @@
     const recMarge = state.recurrent.reduce((s,r)=> s + ((marginOf(r) || 0) * (r.annualize || 1)), 0);
     document.getElementById("kpi-marge-rec").textContent = fmtEUR(recMarge);
 
+    // ---- Totals row: one-shot table ----
+    const osRevente = state.oneshot.reduce((s,r)=> s + (r.variable ? 0 : (r.revente || 0)), 0);
+    const osAchat = state.oneshot.reduce((s,r)=> s + (r.variable || r.achat===null || r.achat===undefined ? 0 : r.achat), 0);
+    document.getElementById("os-total-revente").textContent = fmtEUR(osRevente);
+    document.getElementById("os-total-achat").textContent = fmtEUR(osAchat);
+    document.getElementById("os-total-marge").textContent = fmtEUR(osMarge);
+    document.getElementById("os-total-margepct").textContent = osRevente ? fmtPct(osMarge/osRevente) : "—";
+
+    // ---- Totals row: recurrent table (annualized, excludes % CA lines) ----
+    const recRevente = state.recurrent.reduce((s,r)=> s + (r.variable ? 0 : (r.revente || 0) * (r.annualize || 1)), 0);
+    const recAchat = state.recurrent.reduce((s,r)=> s + (r.variable || r.achat===null || r.achat===undefined ? 0 : r.achat * (r.annualize || 1)), 0);
+    document.getElementById("rec-total-revente").textContent = fmtEUR(recRevente);
+    document.getElementById("rec-total-achat").textContent = fmtEUR(recAchat);
+    document.getElementById("rec-total-marge").textContent = fmtEUR(recMarge);
+    document.getElementById("rec-total-margepct").textContent = recRevente ? fmtPct(recMarge/recRevente) : "—";
+
     const proj = computeProjection();
     fillResultGrid(proj);
     drawChart(proj);
+  }
+
+  // ---------------- Theme toggle ----------------
+  const THEME_KEY = "yesConciergerieTheme";
+  function effectiveTheme(){
+    const explicit = document.documentElement.getAttribute("data-theme");
+    if(explicit) return explicit;
+    return (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) ? "dark" : "light";
+  }
+  function updateThemeBtn(){
+    const btn = document.getElementById("theme-toggle");
+    const eff = effectiveTheme();
+    btn.textContent = eff === "dark" ? "☀️" : "🌙";
+    btn.setAttribute("aria-label", eff === "dark" ? "Passer en thème clair" : "Passer en thème sombre");
+  }
+  function applyStoredTheme(){
+    try{
+      const pref = localStorage.getItem(THEME_KEY);
+      if(pref === "light" || pref === "dark") document.documentElement.setAttribute("data-theme", pref);
+    }catch(e){}
+    updateThemeBtn();
+  }
+  function toggleTheme(){
+    const next = effectiveTheme() === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    try{ localStorage.setItem(THEME_KEY, next); }catch(e){}
+    updateThemeBtn();
+    drawChart(computeProjection());
   }
 
   function rebuildAll(){
@@ -735,7 +807,10 @@
   }
 
   function init(){
+    applyStoredTheme();
     rebuildAll();
+
+    document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
 
     document.querySelectorAll(".btn-add").forEach(btn=>{
       btn.addEventListener("click", ()=> addRow(btn.dataset.section));
