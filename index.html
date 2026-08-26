@@ -103,6 +103,27 @@
   .card-head h2{font-family:"Fraunces", ui-serif, serif; font-weight:600; font-size:1.2rem; margin:0; color:var(--ink);}
   .card-head .hint{font-size:0.8rem; color:var(--ink-muted); max-width:46ch; text-align:right;}
 
+  .params-grid{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    padding:18px 22px 6px;
+  }
+  .param-field{display:flex; flex-direction:column; gap:6px;}
+  .param-label{font-size:0.76rem; color:var(--ink-muted); font-weight:600;}
+  input.cell-input.param-input{
+    text-align:left; font-size:1.05rem; font-weight:600; border:1px solid var(--border-strong);
+    border-radius:6px; padding:8px 10px; background:var(--surface);
+  }
+  .cm-calc{margin:16px 22px 20px; padding:16px 18px; border:1px solid var(--border); border-radius:8px; background:var(--surface-2);}
+  .cm-calc-title{font-size:0.8rem; color:var(--ink-muted); margin-bottom:12px; line-height:1.5;}
+  .cm-calc-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:14px;}
+  .cm-calc-grid > div{display:flex; flex-direction:column; gap:4px;}
+  .cm-label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-muted); font-weight:600;}
+  .cm-value{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:1.3rem; font-weight:600; color:var(--ink);}
+  .cm-value.cm-margin{color:var(--positive);}
+  @media (max-width:760px){
+    .params-grid, .cm-calc-grid{grid-template-columns:1fr;}
+  }
+
   .table-scroll{overflow-x:auto;}
   table{width:100%; border-collapse:collapse; min-width:960px;}
   thead th{
@@ -239,6 +260,35 @@
     <div class="kpi"><div class="label">Marge one-shot totale</div><div class="value" id="kpi-marge-os">—</div></div>
     <div class="kpi"><div class="label">Marge récurrente totale / an</div><div class="value" id="kpi-marge-rec">—</div></div>
   </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Paramètres réseau actuels</h2>
+      <div class="hint">Renseignez la taille réelle du réseau pour chiffrer le channel manager.</div>
+    </div>
+    <div class="params-grid">
+      <label class="param-field">
+        <span class="param-label">Nombre de franchisés actifs</span>
+        <input type="number" class="cell-input param-input" id="param-franchises" step="1">
+      </label>
+      <label class="param-field">
+        <span class="param-label">Nombre de logements gérés (réseau)</span>
+        <input type="number" class="cell-input param-input" id="param-logements" step="1">
+      </label>
+      <label class="param-field">
+        <span class="param-label">CA réservations annuel réseau (€HT)</span>
+        <input type="number" class="cell-input param-input" id="param-ca-resa" step="1000">
+      </label>
+    </div>
+    <div class="cm-calc">
+      <div class="cm-calc-title">Channel manager — revenu de revente 2,5&nbsp;% CA + 2,70&nbsp;€/logement/mois · coût d'achat 2,5&nbsp;% CA</div>
+      <div class="cm-calc-grid">
+        <div><span class="cm-label">Revenu annuel estimé</span><span class="cm-value" id="cm-revenu">—</span></div>
+        <div><span class="cm-label">Coût annuel estimé</span><span class="cm-value" id="cm-cout">—</span></div>
+        <div><span class="cm-label">Marge annuelle estimée</span><span class="cm-value cm-margin" id="cm-marge">—</span></div>
+      </div>
+    </div>
+  </section>
 
   <section class="card">
     <div class="card-head">
@@ -380,7 +430,8 @@
     hyp: {
       nouveaux:[5,8,10], retention:[0.9,0.9,0.9], caMoyen:[150000,150000,150000],
       tauxAttach:[0.3,0.3,0.3], panierOpt:[2410,2410,2410], nbLeads:[8,10,12]
-    }
+    },
+    params: { franchises: 5, logements: 20, caResa: 300000 }
   };
 
   function freshDefaults(){ return JSON.parse(JSON.stringify(DEFAULTS)); }
@@ -391,6 +442,7 @@
       if(!raw) return freshDefaults();
       const parsed = JSON.parse(raw);
       if(!Array.isArray(parsed.oneshot) || !Array.isArray(parsed.recurrent) || !parsed.hyp) return freshDefaults();
+      if(!parsed.params) parsed.params = structuredClone ? structuredClone(DEFAULTS.params) : JSON.parse(JSON.stringify(DEFAULTS.params));
       return parsed;
     }catch(e){ return freshDefaults(); }
   }
@@ -402,7 +454,8 @@
       const clean = {
         oneshot: state.oneshot.map(({_el, ...rest})=>rest),
         recurrent: state.recurrent.map(({_el, ...rest})=>rest),
-        hyp: state.hyp
+        hyp: state.hyp,
+        params: state.params
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
       const status = document.getElementById("save-status");
@@ -768,6 +821,16 @@
     const recAchat = state.recurrent.reduce((s,r)=> s + (parseNumeric(r.achat) || 0) * (r.annualize || 1), 0);
     document.getElementById("rec-total-revente").textContent = fmtEUR(recRevente);
     document.getElementById("rec-total-achat").textContent = fmtEUR(recAchat);
+
+    // ---- Channel manager calculator (2,5 % CA + 2,70 €/logement/mois vente · 2,5 % CA achat) ----
+    const logements = state.params.logements || 0;
+    const caResa = state.params.caResa || 0;
+    const cmRevenu = logements * 2.70 * 12 + 0.025 * caResa;
+    const cmCout = 0.025 * caResa;
+    const cmMarge = cmRevenu - cmCout;
+    document.getElementById("cm-revenu").textContent = fmtEUR(cmRevenu);
+    document.getElementById("cm-cout").textContent = fmtEUR(cmCout);
+    document.getElementById("cm-marge").textContent = fmtEUR(cmMarge);
     document.getElementById("rec-total-marge").textContent = fmtEUR(recMarge);
     document.getElementById("rec-total-margepct").textContent = recRevente ? fmtPct(recMarge/recRevente) : "—";
 
@@ -804,11 +867,18 @@
     drawChart(computeProjection());
   }
 
+  function syncParamInputs(){
+    document.getElementById("param-franchises").value = state.params.franchises;
+    document.getElementById("param-logements").value = state.params.logements;
+    document.getElementById("param-ca-resa").value = state.params.caResa;
+  }
+
   function rebuildAll(){
     buildTable("oneshot", document.querySelector("#table-oneshot tbody"));
     buildTable("recurrent", document.querySelector("#table-recurrent tbody"));
     buildAssumpGrid();
     buildResultGrid();
+    syncParamInputs();
     recompute();
   }
 
@@ -817,6 +887,19 @@
     rebuildAll();
 
     document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+
+    document.getElementById("param-franchises").addEventListener("input", e=>{
+      state.params.franchises = e.target.value === "" ? 0 : parseFloat(e.target.value);
+      recompute(); persist();
+    });
+    document.getElementById("param-logements").addEventListener("input", e=>{
+      state.params.logements = e.target.value === "" ? 0 : parseFloat(e.target.value);
+      recompute(); persist();
+    });
+    document.getElementById("param-ca-resa").addEventListener("input", e=>{
+      state.params.caResa = e.target.value === "" ? 0 : parseFloat(e.target.value);
+      recompute(); persist();
+    });
 
     document.querySelectorAll(".btn-add").forEach(btn=>{
       btn.addEventListener("click", ()=> addRow(btn.dataset.section));
