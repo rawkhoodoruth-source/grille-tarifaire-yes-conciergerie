@@ -1,0 +1,717 @@
+<title>Grille Tarifaire Yes Conciergerie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --bg:#F1F4F2;
+    --surface:#FFFFFF;
+    --surface-2:#E7EBE8;
+    --border:#D6DCD8;
+    --border-strong:#BCC4BF;
+    --ink:#182420;
+    --ink-muted:#5C6B65;
+    --ink-faint:#8B978F;
+    --accent:#9C6B22;
+    --accent-strong:#7C5419;
+    --accent-tint:#F1E3CB;
+    --positive:#3E7D59;
+    --positive-tint:#E1EFE6;
+    --negative:#A23B4E;
+    --negative-tint:#F5E2E5;
+    --focus:#3E6E8E;
+    --shadow: 0 1px 2px rgba(24,36,32,0.06), 0 4px 14px rgba(24,36,32,0.05);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#10161A; --surface:#171F24; --surface-2:#1D262B; --border:#2C373D; --border-strong:#3C4952;
+      --ink:#E7ECE8; --ink-muted:#9AA8A2; --ink-faint:#69756F;
+      --accent:#D9A94E; --accent-strong:#EBC77A; --accent-tint:#3A2F17;
+      --positive:#75BE94; --positive-tint:#1C3427; --negative:#E1899A; --negative-tint:#3A2029;
+      --focus:#6FAFD4; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 18px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#10161A; --surface:#171F24; --surface-2:#1D262B; --border:#2C373D; --border-strong:#3C4952;
+    --ink:#E7ECE8; --ink-muted:#9AA8A2; --ink-faint:#69756F;
+    --accent:#D9A94E; --accent-strong:#EBC77A; --accent-tint:#3A2F17;
+    --positive:#75BE94; --positive-tint:#1C3427; --negative:#E1899A; --negative-tint:#3A2029;
+    --focus:#6FAFD4; --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 18px rgba(0,0,0,0.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:"IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1220px; margin:0 auto; padding:28px 24px 80px;}
+
+  header.top{
+    display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between;
+    gap:16px 32px; padding-bottom:22px; margin-bottom:22px; border-bottom:1px solid var(--border);
+  }
+  .titleblock h1{
+    font-family:"Fraunces", ui-serif, Georgia, serif; font-weight:600; font-size:2.05rem;
+    letter-spacing:-0.01em; text-wrap:balance; margin:0 0 6px; color:var(--ink);
+  }
+  .titleblock p{margin:0; max-width:62ch; color:var(--ink-muted); font-size:0.92rem;}
+  .source-tag{
+    font-family:"IBM Plex Mono", monospace; font-size:0.72rem; color:var(--ink-faint);
+    text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; padding-bottom:4px;
+  }
+
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:30px;}
+  .kpi{background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:16px 18px; box-shadow:var(--shadow);}
+  .kpi .label{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--ink-muted); margin-bottom:8px; font-weight:600;}
+  .kpi .value{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; font-size:1.5rem; font-weight:600; color:var(--ink);}
+  .kpi.accent{border-color:var(--accent); background:linear-gradient(180deg, var(--accent-tint), var(--surface) 70%);}
+  .kpi.accent .value{color:var(--accent-strong);}
+
+  section.card{background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); margin-bottom:26px; overflow:hidden;}
+  .card-head{display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding:18px 22px 14px; border-bottom:1px solid var(--border);}
+  .card-head h2{font-family:"Fraunces", ui-serif, serif; font-weight:600; font-size:1.2rem; margin:0; color:var(--ink);}
+  .card-head .hint{font-size:0.8rem; color:var(--ink-muted); max-width:46ch; text-align:right;}
+
+  .table-scroll{overflow-x:auto;}
+  table{width:100%; border-collapse:collapse; min-width:960px;}
+  thead th{
+    text-align:left; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-muted);
+    font-weight:600; padding:10px 14px; background:var(--surface-2); white-space:nowrap; border-bottom:1px solid var(--border);
+  }
+  thead th.num{text-align:right;}
+  thead th.actions-col{text-align:center; width:44px;}
+  tbody td{padding:9px 12px; border-bottom:1px solid var(--border); vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:var(--surface-2);}
+  td.num, .num{text-align:right; font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums;}
+  td.poste{max-width:230px;}
+  td.note{max-width:250px;}
+  td.actions-col{text-align:center; width:44px;}
+
+  input.cell-input{
+    width:100%; min-width:74px; text-align:right;
+    font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums;
+    font-size:0.92rem; color:var(--ink); background:transparent; border:1px solid transparent;
+    border-radius:5px; padding:5px 7px; -moz-appearance:textfield;
+  }
+  input.cell-input::-webkit-outer-spin-button, input.cell-input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0;}
+  input.cell-input:hover{border-color:var(--border-strong); background:var(--surface);}
+  input.cell-input:focus{outline:none; border-color:var(--focus); background:var(--surface); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);}
+  input.cell-input:disabled{color:var(--ink-faint); cursor:not-allowed;}
+  input.cell-input::placeholder{color:var(--ink-faint); font-family:"IBM Plex Sans", sans-serif;}
+
+  input.txt{
+    width:100%; text-align:left; font-family:"IBM Plex Sans", sans-serif; color:var(--ink);
+    background:transparent; border:1px solid transparent; border-radius:5px; padding:5px 7px; font-size:0.88rem;
+  }
+  input.txt:hover{border-color:var(--border-strong); background:var(--surface);}
+  input.txt:focus{outline:none; border-color:var(--focus); background:var(--surface); box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);}
+  input.txt.name-input{font-weight:500; font-size:0.92rem;}
+  input.txt.unit-input{font-size:0.74rem; color:var(--ink-faint); margin-top:1px;}
+  input.txt.note-input{font-size:0.78rem; color:var(--ink-muted);}
+
+  input.chip-input{
+    font-family:"IBM Plex Sans", sans-serif; font-size:0.68rem; font-weight:600; letter-spacing:0.02em;
+    padding:5px 9px; border-radius:99px; width:100%; min-width:150px;
+    border:1px solid var(--border-strong); background:transparent; color:var(--ink-muted);
+  }
+  input.chip-input:hover{background:var(--surface);}
+  input.chip-input:focus{outline:none; box-shadow:0 0 0 3px color-mix(in srgb, var(--focus) 22%, transparent);}
+  input.chip-input.obligatoire{border-color:var(--accent); color:var(--accent-strong); background:var(--accent-tint);}
+  input.chip-input.na{border-style:dashed; color:var(--ink-faint);}
+
+  .na-text{color:var(--ink-faint); font-family:"IBM Plex Mono", monospace; font-size:0.85rem;}
+
+  .margin-pos{color:var(--positive); font-weight:600;}
+  .margin-neg{color:var(--negative); font-weight:600;}
+  .margin-pill{display:inline-block; padding:2px 8px; border-radius:6px; font-size:0.82rem; font-weight:600;}
+  .margin-pill.pos{background:var(--positive-tint); color:var(--positive);}
+  .margin-pill.neg{background:var(--negative-tint); color:var(--negative);}
+
+  .del-btn{
+    width:26px; height:26px; border-radius:6px; border:1px solid transparent; background:transparent;
+    color:var(--ink-faint); font-size:0.95rem; line-height:1; cursor:pointer; display:inline-flex;
+    align-items:center; justify-content:center;
+  }
+  .del-btn:hover{border-color:var(--negative); color:var(--negative); background:var(--negative-tint);}
+  .del-btn:focus-visible{outline:2px solid var(--focus); outline-offset:1px;}
+
+  .add-row-bar{padding:12px 22px 18px;}
+  button.btn-add{
+    font-family:"IBM Plex Sans", sans-serif; font-size:0.82rem; font-weight:600; color:var(--accent-strong);
+    background:var(--accent-tint); border:1px solid var(--accent); border-radius:7px; padding:8px 14px; cursor:pointer;
+  }
+  button.btn-add:hover{filter:brightness(1.04);}
+  button.btn-add:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+
+  tfoot td{padding:12px 14px; font-weight:600; background:var(--surface-2); border-top:1px solid var(--border-strong);}
+
+  .assump-grid{display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:18px 22px 6px;}
+  .assump-grid > div{background:var(--surface); padding:10px 12px;}
+  .assump-grid .row-label{background:var(--surface-2); font-size:0.8rem; color:var(--ink-muted); display:flex; align-items:center;}
+  .assump-grid .col-head{background:var(--surface-2); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-muted); font-weight:600; text-align:center;}
+  .assump-grid input.cell-input{text-align:center;}
+
+  .result-grid{display:grid; grid-template-columns:1.6fr repeat(3,1fr); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:8px; overflow:hidden; margin:6px 22px 20px;}
+  .result-grid > div{background:var(--surface); padding:10px 12px; font-size:0.86rem;}
+  .result-grid .row-label{background:var(--surface-2); color:var(--ink-muted); font-size:0.82rem; display:flex; align-items:center;}
+  .result-grid .col-head{background:var(--surface-2); font-size:0.7rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--ink-muted); font-weight:600; text-align:center;}
+  .result-grid .num{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums; text-align:right;}
+  .result-grid .total-row > div{background:var(--surface-2); font-weight:700; color:var(--ink);}
+  .result-grid .margin-row > div{background:var(--positive-tint);}
+  .result-grid .margin-row .num{color:var(--positive); font-weight:700;}
+
+  .chart-wrap{padding:6px 22px 24px;}
+  canvas#chart{width:100%; height:220px; display:block;}
+
+  .legend{display:flex; flex-wrap:wrap; gap:10px 22px; align-items:center; font-size:0.78rem; color:var(--ink-muted); padding:16px 22px;}
+  .legend .swatch{width:11px; height:11px; border-radius:3px; display:inline-block; margin-right:6px; vertical-align:-1px;}
+  .actions{display:flex; gap:10px; align-items:center;}
+  button.reset{
+    font-family:"IBM Plex Sans", sans-serif; font-size:0.8rem; font-weight:600; color:var(--ink-muted);
+    background:var(--surface); border:1px solid var(--border-strong); border-radius:6px; padding:7px 13px; cursor:pointer;
+  }
+  button.reset:hover{color:var(--negative); border-color:var(--negative);}
+  button.reset:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+  .save-flag{font-size:0.74rem; color:var(--ink-faint); font-family:"IBM Plex Mono",monospace;}
+  footer.note{font-size:0.76rem; color:var(--ink-faint); text-align:center; padding-top:10px;}
+
+  @media (max-width:760px){
+    .kpis{grid-template-columns:repeat(2,1fr);}
+    .assump-grid, .result-grid{grid-template-columns:1.3fr repeat(3,1fr); font-size:0.8rem;}
+    .card-head{flex-direction:column; align-items:flex-start;}
+    .card-head .hint{text-align:left;}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
+</style>
+
+<div class="wrap">
+
+  <header class="top">
+    <div class="titleblock">
+      <h1>Grille tarifaire — Yes Conciergerie</h1>
+      <p>Prix d'achat (coût prestataire) → prix de revente (facturé au franchisé). Tout est modifiable : montants, libellés, et vous pouvez ajouter ou supprimer des lignes de frais. Les changements sont enregistrés dans ce navigateur.</p>
+    </div>
+    <div class="source-tag">Source : Propale Tarifaire · benchmark-franchises-france-2026.html</div>
+  </header>
+
+  <div class="kpis">
+    <div class="kpi accent"><div class="label">Droit d'entrée</div><div class="value" id="kpi-de">—</div></div>
+    <div class="kpi"><div class="label">Charges fixes obligatoires / an</div><div class="value" id="kpi-fixe">—</div></div>
+    <div class="kpi"><div class="label">Marge one-shot totale</div><div class="value" id="kpi-marge-os">—</div></div>
+    <div class="kpi"><div class="label">Marge récurrente totale / an</div><div class="value" id="kpi-marge-rec">—</div></div>
+  </div>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Frais uniques — one-shot</h2>
+      <div class="hint">Perçus une seule fois, à l'entrée du franchisé.</div>
+    </div>
+    <div class="table-scroll">
+      <table id="table-oneshot">
+        <thead><tr>
+          <th>Poste</th><th class="num">Prix de revente</th><th class="num">Prix d'achat</th>
+          <th class="num">Marge €</th><th class="num">Marge %</th><th>Note</th><th class="actions-col"></th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="add-row-bar"><button class="btn-add" type="button" data-section="oneshot">+ Ajouter une ligne one-shot</button></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Charges récurrentes</h2>
+      <div class="hint">Facturées au franchisé chaque mois ou chaque année.</div>
+    </div>
+    <div class="table-scroll">
+      <table id="table-recurrent">
+        <thead><tr>
+          <th>Poste</th><th class="num">Prix de revente</th><th class="num">Prix d'achat</th>
+          <th class="num">Marge €</th><th class="num">Marge %</th><th>Note</th><th class="actions-col"></th>
+        </tr></thead>
+        <tbody></tbody>
+        <tfoot><tr>
+          <td colspan="4">Total charges fixes obligatoires an 1&nbsp;&amp;&nbsp;2 <span style="font-weight:400;color:var(--ink-muted);">(plancher + marketing + community mgmt + maintenance)</span></td>
+          <td class="num" id="total-fixe-an12">—</td><td></td>
+        </tr></tfoot>
+      </table>
+    </div>
+    <div class="add-row-bar"><button class="btn-add" type="button" data-section="recurrent">+ Ajouter une ligne récurrente</button></div>
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Projection rapide — 3 ans</h2>
+      <div class="hint">Hypothèses modifiables ci-dessous ; les coûts restent liés aux prix d'achat saisis plus haut.</div>
+    </div>
+    <div class="assump-grid" id="assump-grid"></div>
+    <div class="result-grid" id="result-grid"></div>
+    <div class="chart-wrap"><canvas id="chart"></canvas></div>
+  </section>
+
+  <section class="card">
+    <div class="legend">
+      <span><span class="swatch" style="background:var(--positive-tint);"></span>Marge positive</span>
+      <span><span class="swatch" style="background:var(--negative-tint);"></span>Marge négative</span>
+      <span>Prix d'achat vide = N/A (pas de prestataire externe identifié)</span>
+      <span style="flex:1"></span>
+      <div class="actions">
+        <span class="save-flag" id="save-flag"></span>
+        <button class="reset" id="reset-btn" type="button">Réinitialiser les valeurs</button>
+      </div>
+    </div>
+  </section>
+
+  <footer class="note">Outil de travail interne — les montants « prix de revente » reprennent la Propale Tarifaire ; les « prix d'achat », lignes ajoutées et hypothèses de projection sont à valider avec vos coûts réels.</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const STORAGE_KEY = "yesConciergerieGrille.v2";
+
+  const fmtEUR = n => (n===null||n===undefined||isNaN(n)) ? "—" :
+    new Intl.NumberFormat("fr-FR",{maximumFractionDigits:0}).format(Math.round(n)) + " €";
+  const fmtPct = n => (n===null||n===undefined||isNaN(n)) ? "—" : (n*100).toFixed(1).replace(".", ",") + " %";
+
+  const DEFAULTS = {
+    oneshot: [
+      {id:"de", label:"Droit d'entrée (forfait réseau)", statut:"Obligatoire", unit:"€HT unique", revente:19800, achat:null,
+        note:"Contrepartie marque + formation + accompagnement initial ; pas de prestataire externe unique identifié."},
+      {id:"packit_office", label:"Pack informatique avec licence Office", statut:"Obligatoire (variante A)", unit:"€HT unique", revente:523, achat:0,
+        note:"Matériel + licence Office achetés auprès d'un fournisseur IT."},
+      {id:"packit_noffice", label:"Pack informatique sans licence Office", statut:"Obligatoire (variante B)", unit:"€HT unique", revente:446, achat:0,
+        note:"Alternative à la ligne précédente (sans licence Office)."},
+      {id:"setup_rs", label:"Setup réseaux sociaux (Instagram + Facebook)", statut:"Option", unit:"€HT unique", revente:180, achat:0,
+        note:"Prestation agence / freelance création des comptes."},
+      {id:"site_web", label:"Site internet zone (2e zone)", statut:"Option", unit:"€HT unique", revente:1250, achat:0,
+        note:"Prestation agence web."},
+      {id:"meta_ads", label:"Budget Meta Ads lancement", statut:"Option", unit:"€HT unique", revente:3000, achat:0,
+        note:"À vérifier : si pass-through publicitaire, la marge réelle = frais de gestion, pas le montant plein."},
+      {id:"google_ads", label:"Google Ads (6 premiers mois)", statut:"Option", unit:"€HT unique", revente:3000, achat:0,
+        note:"Même remarque que Meta Ads."},
+      {id:"seo", label:"Pack SEO renforcé (20 backlinks)", statut:"Option", unit:"€HT unique", revente:2000, achat:0,
+        note:"Prestation agence SEO."},
+      {id:"setup2026", label:"Setup franchisés sept. 2026", statut:"Nouveau — non fixé", unit:"€HT unique", revente:0, achat:0,
+        note:"Ligne annoncée dans le builder tarifaire, montant pas encore arrêté."},
+      {id:"outil_gestion", label:"Outil de gestion interne", statut:"En construction", unit:"€HT unique", revente:0, achat:0,
+        note:"Outil en cours de développement, tarif pas encore arrêté."}
+    ],
+    recurrent: [
+      {id:"redevance_reseau", label:"Redevance réseau", statut:"Obligatoire", unit:"6 % CA HT (mini 650 €HT/mois)", revente:null, achat:null, variable:true,
+        note:"Royauté de marque assise sur le CA du franchisé : pas de prestataire externe."},
+      {id:"plancher12", label:"Plancher royalties an 1 & 2", statut:"Obligatoire", unit:"€HT/an", revente:8500, achat:null,
+        note:"Montant plancher garanti (remplace le 6 % si celui-ci est inférieur)."},
+      {id:"plancher3", label:"Plancher royalties an 3", statut:"Obligatoire", unit:"€HT/an", revente:9500, achat:null,
+        note:"Idem à partir de l'année 3."},
+      {id:"redevance_mkt", label:"Redevance marketing", statut:"Obligatoire", unit:"€HT/an", revente:2800, achat:null,
+        note:"Fonds marketing mutualisé réseau ; coût non attribuable à un prestataire unique."},
+      {id:"community_mgmt", label:"Community management", statut:"Obligatoire", unit:"€HT/mois", revente:250, achat:0, annualize:12,
+        note:"Agence/freelance CM (12 mois = 3 000 €HT/an)."},
+      {id:"maintenance", label:"Maintenance site", statut:"Obligatoire", unit:"€HT/an", revente:250, achat:0,
+        note:"Hébergement + maintenance technique du site."},
+      {id:"cm_0_5", label:"Channel manager (0–5 logements)", statut:"Selon parc géré", unit:"€HT/mois + 3,5 % résa", revente:100, achat:0, annualize:12,
+        note:"Abonnement logiciel (ex. Smoobu/Beds24) + commission réservations."},
+      {id:"cm_6_10", label:"Channel manager (6–10 logements)", statut:"Selon parc géré", unit:"€HT/mois + 3,5 % résa", revente:50, achat:0, annualize:12,
+        note:"Palier intermédiaire."},
+      {id:"cm_11p", label:"Channel manager (11+ logements)", statut:"Selon parc géré", unit:"3,5 % résa uniquement", revente:null, achat:null, variable:true,
+        note:"Au-delà de 10 logements : plus de forfait fixe, uniquement la commission."},
+      {id:"lead", label:"Lead propriétaire closé", statut:"Nouvelle ligne variable", unit:"€ / deal", revente:150, achat:0,
+        note:"Coût = dépense marketing/acquisition moyenne par lead."}
+    ],
+    hyp: {
+      nouveaux:[5,8,10], retention:[0.9,0.9,0.9], caMoyen:[150000,150000,150000],
+      tauxAttach:[0.3,0.3,0.3], panierOpt:[2410,2410,2410], nbLeads:[8,10,12]
+    }
+  };
+
+  function freshDefaults(){ return JSON.parse(JSON.stringify(DEFAULTS)); }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return freshDefaults();
+      const parsed = JSON.parse(raw);
+      if(!Array.isArray(parsed.oneshot) || !Array.isArray(parsed.recurrent) || !parsed.hyp) return freshDefaults();
+      return parsed;
+    }catch(e){ return freshDefaults(); }
+  }
+
+  let state = loadState();
+  let saveTimer = null;
+  function persist(){
+    try{
+      const clean = {
+        oneshot: state.oneshot.map(({_el, ...rest})=>rest),
+        recurrent: state.recurrent.map(({_el, ...rest})=>rest),
+        hyp: state.hyp
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
+      const flag = document.getElementById("save-flag");
+      flag.textContent = "Enregistré à " + new Date().toLocaleTimeString("fr-FR");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(()=>{ flag.textContent = ""; }, 3000);
+    }catch(e){ /* localStorage unavailable in this context */ }
+  }
+
+  function rowById(section, id){ return state[section].find(r=>r.id===id); }
+  function g(section, id, field, fallback){
+    const r = rowById(section, id);
+    if(!r) return fallback;
+    const v = r[field];
+    return (typeof v === "number") ? v : fallback;
+  }
+
+  function marginOf(row){
+    if(row.variable || row.achat===null || row.achat===undefined || row.revente===null || row.revente===undefined) return null;
+    return row.revente - row.achat;
+  }
+  function marginPctOf(row){
+    const m = marginOf(row);
+    if(m===null || !row.revente) return null;
+    return m / row.revente;
+  }
+
+  let uidCounter = 1;
+  function newId(){ return "custom_" + (Date.now()) + "_" + (uidCounter++); }
+
+  function buildTable(section, tbodyEl){
+    tbodyEl.innerHTML = "";
+    state[section].forEach(row=>{
+      const tr = document.createElement("tr");
+
+      // ---- Poste (name + unit, both editable) ----
+      const tdPoste = document.createElement("td");
+      tdPoste.className = "poste";
+      const nameInp = document.createElement("input");
+      nameInp.type = "text"; nameInp.className = "txt name-input"; nameInp.value = row.label;
+      nameInp.addEventListener("input", ()=>{ row.label = nameInp.value; persist(); });
+      const unitInp = document.createElement("input");
+      unitInp.type = "text"; unitInp.className = "txt unit-input"; unitInp.value = row.unit;
+      unitInp.addEventListener("input", ()=>{ row.unit = unitInp.value; persist(); });
+      tdPoste.appendChild(nameInp); tdPoste.appendChild(unitInp);
+      tr.appendChild(tdPoste);
+
+      // ---- Prix de revente ----
+      const tdRevente = document.createElement("td");
+      tdRevente.className = "num";
+      if(row.variable){
+        tdRevente.innerHTML = `<span class="na-text">variable</span>`;
+      } else {
+        const inp = document.createElement("input");
+        inp.type = "number"; inp.className = "cell-input"; inp.step = "1";
+        inp.value = row.revente ?? 0;
+        inp.addEventListener("input", ()=>{
+          row.revente = inp.value === "" ? 0 : parseFloat(inp.value);
+          recompute(); persist();
+        });
+        tdRevente.appendChild(inp);
+      }
+      tr.appendChild(tdRevente);
+
+      // ---- Prix d'achat ----
+      const tdAchat = document.createElement("td");
+      tdAchat.className = "num";
+      if(row.variable){
+        tdAchat.innerHTML = `<span class="na-text">N/A</span>`;
+      } else {
+        const inp = document.createElement("input");
+        inp.type = "number"; inp.className = "cell-input"; inp.step = "1";
+        inp.placeholder = "N/A";
+        inp.value = (row.achat===null || row.achat===undefined) ? "" : row.achat;
+        inp.addEventListener("input", ()=>{
+          row.achat = inp.value === "" ? null : parseFloat(inp.value);
+          recompute(); persist();
+        });
+        tdAchat.appendChild(inp);
+      }
+      tr.appendChild(tdAchat);
+
+      const tdMargeE = document.createElement("td"); tdMargeE.className = "num margin-e"; tr.appendChild(tdMargeE);
+      const tdMargeP = document.createElement("td"); tdMargeP.className = "num margin-p"; tr.appendChild(tdMargeP);
+
+      // ---- Note ----
+      const tdNote = document.createElement("td");
+      tdNote.className = "note";
+      const noteInp = document.createElement("input");
+      noteInp.type = "text"; noteInp.className = "txt note-input"; noteInp.value = row.note || "";
+      noteInp.addEventListener("input", ()=>{ row.note = noteInp.value; persist(); });
+      tdNote.appendChild(noteInp);
+      tr.appendChild(tdNote);
+
+      // ---- Delete ----
+      const tdActions = document.createElement("td");
+      tdActions.className = "actions-col";
+      const delBtn = document.createElement("button");
+      delBtn.type = "button"; delBtn.className = "del-btn"; delBtn.innerHTML = "✕";
+      delBtn.setAttribute("aria-label", "Supprimer cette ligne");
+      delBtn.addEventListener("click", ()=>{
+        state[section] = state[section].filter(r=>r.id!==row.id);
+        buildTable(section, tbodyEl);
+        recompute(); persist();
+      });
+      tdActions.appendChild(delBtn);
+      tr.appendChild(tdActions);
+
+      row._el = { margeE: tdMargeE, margeP: tdMargeP };
+      tbodyEl.appendChild(tr);
+    });
+  }
+
+  function refreshMargins(section){
+    state[section].forEach(row=>{
+      if(!row._el) return;
+      const m = marginOf(row);
+      const p = marginPctOf(row);
+      if(row.variable || m===null){
+        row._el.margeE.innerHTML = `<span class="na-text">N/A</span>`;
+        row._el.margeP.innerHTML = `<span class="na-text">N/A</span>`;
+      } else {
+        const cls = m<0 ? "neg" : "pos";
+        row._el.margeE.innerHTML = `<span class="margin-pill ${cls}">${fmtEUR(m)}</span>`;
+        row._el.margeP.innerHTML = `<span class="${cls==='neg'?'margin-neg':'margin-pos'}">${fmtPct(p)}</span>`;
+      }
+    });
+  }
+
+  function addRow(section){
+    const row = section === "oneshot"
+      ? {id:newId(), label:"Nouveau poste", statut:"Option", unit:"€HT unique", revente:0, achat:0, note:""}
+      : {id:newId(), label:"Nouveau poste", statut:"Option", unit:"€HT/an", revente:0, achat:0, note:""};
+    state[section].push(row);
+    const tbodyEl = document.querySelector(`#table-${section} tbody`);
+    buildTable(section, tbodyEl);
+    recompute(); persist();
+    const inputs = tbodyEl.lastElementChild.querySelectorAll("input.name-input");
+    if(inputs[0]) inputs[0].focus();
+  }
+
+  // ---------------- Projection ----------------
+  const HYP_LABELS = [
+    {key:"nouveaux", label:"Nouveaux franchisés signés", pct:false},
+    {key:"retention", label:"Taux de rétention franchisés existants", pct:true},
+    {key:"caMoyen", label:"CA locatif géré moyen / franchisé (€/an)", pct:false},
+    {key:"tauxAttach", label:"Taux d'attachement options one-shot", pct:true},
+    {key:"panierOpt", label:"Panier moyen options si attachées (€)", pct:false},
+    {key:"nbLeads", label:"Leads propriétaires clos / franchisé actif / an", pct:false}
+  ];
+
+  function divEl(cls, text){ const d=document.createElement("div"); d.className=cls; d.textContent=text; return d; }
+
+  function buildAssumpGrid(){
+    const el = document.getElementById("assump-grid");
+    el.innerHTML = "";
+    el.appendChild(divEl("row-label",""));
+    ["An 1","An 2","An 3"].forEach(h=> el.appendChild(divEl("col-head", h)));
+    HYP_LABELS.forEach(hyp=>{
+      el.appendChild(divEl("row-label", hyp.label));
+      for(let i=0;i<3;i++){
+        const cell = document.createElement("div");
+        const inp = document.createElement("input");
+        inp.type = "number"; inp.className = "cell-input";
+        inp.step = hyp.pct ? "0.01" : "1";
+        inp.value = state.hyp[hyp.key][i];
+        inp.addEventListener("input", ()=>{
+          state.hyp[hyp.key][i] = inp.value==="" ? 0 : parseFloat(inp.value);
+          recompute(); persist();
+        });
+        cell.appendChild(inp);
+        el.appendChild(cell);
+      }
+    });
+  }
+
+  const RESULT_ROWS = [
+    {key:"actifs", label:"Franchisés actifs (cumulé)", fmt:n=>n.toFixed(1)},
+    {key:"revDE", label:"Revenu droit d'entrée", fmt:fmtEUR},
+    {key:"revPackIT", label:"Revenu pack informatique (nouveaux)", fmt:fmtEUR},
+    {key:"revOpt", label:"Revenu options one-shot", fmt:fmtEUR},
+    {key:"revRoyalty", label:"Redevance réseau (MAX 6% CA, plancher)", fmt:fmtEUR},
+    {key:"revMkt", label:"Redevance marketing", fmt:fmtEUR},
+    {key:"revCM", label:"Community management", fmt:fmtEUR},
+    {key:"revMaint", label:"Maintenance site", fmt:fmtEUR},
+    {key:"revChannel", label:"Channel manager (palier 6–10 + 3,5% CA)", fmt:fmtEUR},
+    {key:"revLeads", label:"Leads propriétaires", fmt:fmtEUR},
+    {key:"revTotal", label:"Revenu total réseau", fmt:fmtEUR, total:true},
+    {key:"costTotal", label:"Coûts prestataires estimés", fmt:fmtEUR},
+    {key:"marge", label:"Marge brute estimée", fmt:fmtEUR, margin:true},
+    {key:"margePct", label:"Marge brute %", fmt:fmtPct, margin:true}
+  ];
+
+  function buildResultGrid(){
+    const el = document.getElementById("result-grid");
+    el.innerHTML = "";
+    el.appendChild(divEl("row-label",""));
+    ["An 1","An 2","An 3"].forEach(h=> el.appendChild(divEl("col-head", h)));
+    RESULT_ROWS.forEach(rr=>{
+      const rowCls = rr.total ? "total-row" : (rr.margin ? "margin-row" : "");
+      const label = document.createElement("div");
+      label.className = "row-label" + (rowCls? " "+rowCls:"");
+      label.textContent = rr.label;
+      el.appendChild(label);
+      rr._cells = [];
+      for(let i=0;i<3;i++){
+        const cell = document.createElement("div");
+        cell.className = "num" + (rowCls? " "+rowCls:"");
+        el.appendChild(cell);
+        rr._cells.push(cell);
+      }
+    });
+  }
+
+  function computeProjection(){
+    const gg = {
+      de: g("oneshot","de","revente",19800),
+      packIT: g("oneshot","packit_office","revente",523),
+      packITAchat: g("oneshot","packit_office","achat",0),
+      siteWebAchat: g("oneshot","site_web","achat",0),
+      metaAdsAchat: g("oneshot","meta_ads","achat",0),
+      googleAdsAchat: g("oneshot","google_ads","achat",0),
+      seoAchat: g("oneshot","seo","achat",0),
+      plancher12: g("recurrent","plancher12","revente",8500),
+      plancher3: g("recurrent","plancher3","revente",9500),
+      redevanceMkt: g("recurrent","redevance_mkt","revente",2800),
+      cmAnnual: g("recurrent","community_mgmt","revente",250)*12,
+      cmAchat: g("recurrent","community_mgmt","achat",0),
+      maintenance: g("recurrent","maintenance","revente",250),
+      cm610Annual: g("recurrent","cm_6_10","revente",50)*12,
+      cm610Achat: g("recurrent","cm_6_10","achat",0),
+      lead: g("recurrent","lead","revente",150),
+      leadAchat: g("recurrent","lead","achat",0)
+    };
+    const h = state.hyp;
+    const actifs = [0,0,0];
+    for(let i=0;i<3;i++) actifs[i] = i===0 ? h.nouveaux[0] : actifs[i-1]*h.retention[i-1] + h.nouveaux[i];
+
+    const out = {actifs, revDE:[], revPackIT:[], revOpt:[], revRoyalty:[], revMkt:[], revCM:[], revMaint:[], revChannel:[], revLeads:[], revTotal:[], costTotal:[], marge:[], margePct:[]};
+    for(let i=0;i<3;i++){
+      const nouveaux = h.nouveaux[i], act = actifs[i], ca = h.caMoyen[i];
+      out.revDE[i] = nouveaux * gg.de;
+      out.revPackIT[i] = nouveaux * gg.packIT;
+      out.revOpt[i] = nouveaux * h.tauxAttach[i] * h.panierOpt[i];
+      out.revRoyalty[i] = act * Math.max(ca*0.06, i<2 ? gg.plancher12 : gg.plancher3);
+      out.revMkt[i] = act * gg.redevanceMkt;
+      out.revCM[i] = act * gg.cmAnnual;
+      out.revMaint[i] = act * gg.maintenance;
+      out.revChannel[i] = act * (gg.cm610Annual + ca*0.035);
+      out.revLeads[i] = act * h.nbLeads[i] * gg.lead;
+      out.revTotal[i] = out.revDE[i]+out.revPackIT[i]+out.revOpt[i]+out.revRoyalty[i]+out.revMkt[i]+out.revCM[i]+out.revMaint[i]+out.revChannel[i]+out.revLeads[i];
+
+      const costOneshot = nouveaux*gg.packITAchat + nouveaux*h.tauxAttach[i]*(gg.siteWebAchat+gg.metaAdsAchat+gg.googleAdsAchat+gg.seoAchat);
+      const costRecurr = act*(gg.cmAchat*12 + gg.cm610Achat*12 + h.nbLeads[i]*gg.leadAchat);
+      out.costTotal[i] = costOneshot + costRecurr;
+      out.marge[i] = out.revTotal[i] - out.costTotal[i];
+      out.margePct[i] = out.revTotal[i] ? out.marge[i]/out.revTotal[i] : 0;
+    }
+    return out;
+  }
+
+  function fillResultGrid(proj){
+    RESULT_ROWS.forEach(rr=>{ for(let i=0;i<3;i++) rr._cells[i].textContent = rr.fmt(proj[rr.key][i]); });
+  }
+
+  function drawChart(proj){
+    const canvas = document.getElementById("chart");
+    const dpr = window.devicePixelRatio || 1;
+    const cssW = canvas.clientWidth || canvas.parentElement.clientWidth;
+    const cssH = 220;
+    canvas.width = cssW*dpr; canvas.height = cssH*dpr;
+    canvas.style.height = cssH+"px";
+    const ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssW,cssH);
+
+    const styles = getComputedStyle(document.documentElement);
+    const cRevenu = styles.getPropertyValue("--accent").trim();
+    const cCout = styles.getPropertyValue("--negative").trim();
+    const cMarge = styles.getPropertyValue("--positive").trim();
+    const cGrid = styles.getPropertyValue("--border").trim();
+    const cText = styles.getPropertyValue("--ink-muted").trim();
+
+    const years = ["An 1","An 2","An 3"];
+    const maxVal = Math.max(...proj.revTotal, 1) * 1.12;
+    const padL = 54, padB = 28, padT = 14, padR = 14;
+    const plotW = cssW - padL - padR, plotH = cssH - padT - padB;
+
+    ctx.strokeStyle = cGrid; ctx.lineWidth = 1; ctx.font = "11px 'IBM Plex Mono', monospace"; ctx.fillStyle = cText;
+    const steps = 4;
+    for(let s=0; s<=steps; s++){
+      const y = padT + plotH - (plotH*s/steps);
+      ctx.beginPath(); ctx.moveTo(padL,y); ctx.lineTo(cssW-padR,y); ctx.stroke();
+      ctx.fillText(Math.round(maxVal*s/steps/1000)+"k", 4, y+4);
+    }
+
+    const groupW = plotW/3, barW = groupW*0.22;
+    years.forEach((yr,i)=>{
+      const cx = padL + groupW*i + groupW/2;
+      const bars = [
+        {v: proj.revTotal[i], color: cRevenu},
+        {v: proj.costTotal[i], color: cCout},
+        {v: Math.max(proj.marge[i],0), color: cMarge}
+      ];
+      bars.forEach((b,j)=>{
+        const h = plotH * (b.v/maxVal);
+        const x = cx - barW*1.5 + j*(barW+6);
+        ctx.fillStyle = b.color;
+        ctx.fillRect(x, padT+plotH-h, barW, h);
+      });
+      ctx.fillStyle = cText; ctx.textAlign = "center"; ctx.fillText(yr, cx, cssH-8);
+    });
+    ctx.textAlign = "left";
+  }
+
+  function recompute(){
+    refreshMargins("oneshot");
+    refreshMargins("recurrent");
+
+    document.getElementById("kpi-de").textContent = fmtEUR(g("oneshot","de","revente",0));
+
+    const fixedTotal = g("recurrent","plancher12","revente",0) + g("recurrent","redevance_mkt","revente",0)
+      + g("recurrent","community_mgmt","revente",0)*12 + g("recurrent","maintenance","revente",0);
+    document.getElementById("kpi-fixe").textContent = fmtEUR(fixedTotal);
+    document.getElementById("total-fixe-an12").textContent = fmtEUR(fixedTotal);
+
+    const osMarge = state.oneshot.reduce((s,r)=> s + (marginOf(r) || 0), 0);
+    document.getElementById("kpi-marge-os").textContent = fmtEUR(osMarge);
+
+    const recMarge = state.recurrent.reduce((s,r)=> s + ((marginOf(r) || 0) * (r.annualize || 1)), 0);
+    document.getElementById("kpi-marge-rec").textContent = fmtEUR(recMarge);
+
+    const proj = computeProjection();
+    fillResultGrid(proj);
+    drawChart(proj);
+  }
+
+  function rebuildAll(){
+    buildTable("oneshot", document.querySelector("#table-oneshot tbody"));
+    buildTable("recurrent", document.querySelector("#table-recurrent tbody"));
+    buildAssumpGrid();
+    buildResultGrid();
+    recompute();
+  }
+
+  function init(){
+    rebuildAll();
+
+    document.querySelectorAll(".btn-add").forEach(btn=>{
+      btn.addEventListener("click", ()=> addRow(btn.dataset.section));
+    });
+
+    document.getElementById("reset-btn").addEventListener("click", ()=>{
+      if(!confirm("Réinitialiser toutes les lignes et valeurs par défaut de la propale ? Vos modifications locales (y compris lignes ajoutées) seront perdues.")) return;
+      try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+      state = freshDefaults();
+      rebuildAll();
+      document.getElementById("save-flag").textContent = "Réinitialisé";
+    });
+
+    window.addEventListener("resize", ()=> drawChart(computeProjection()));
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+  else init();
+})();
+</script>
