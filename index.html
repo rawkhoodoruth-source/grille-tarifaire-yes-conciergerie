@@ -46,6 +46,30 @@
   }
   .wrap{max-width:1220px; margin:0 auto; padding:28px 24px 80px;}
 
+  .savebar{
+    position:sticky; top:0; z-index:20;
+    display:flex; align-items:center; justify-content:flex-end; gap:14px;
+    padding:10px 24px; background:var(--surface); border-bottom:1px solid var(--border);
+    box-shadow:var(--shadow);
+  }
+  .save-status{
+    font-size:0.78rem; color:var(--ink-muted); font-family:"IBM Plex Mono", monospace;
+    transition:color 0.2s ease;
+  }
+  .save-status.just-saved{color:var(--positive); font-weight:600;}
+  button.btn-save{
+    font-family:"IBM Plex Sans", sans-serif; font-size:0.86rem; font-weight:700;
+    color:var(--surface); background:var(--accent); border:1px solid var(--accent-strong);
+    border-radius:7px; padding:9px 18px; cursor:pointer; white-space:nowrap;
+  }
+  button.btn-save:hover{background:var(--accent-strong);}
+  button.btn-save:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
+  button.btn-save.just-saved{background:var(--positive); border-color:var(--positive);}
+  @media (max-width:600px){
+    .savebar{justify-content:space-between;}
+    .save-status{display:none;}
+  }
+
   header.top{
     display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between;
     gap:16px 32px; padding-bottom:22px; margin-bottom:22px; border-bottom:1px solid var(--border);
@@ -173,7 +197,6 @@
   }
   button.reset:hover{color:var(--negative); border-color:var(--negative);}
   button.reset:focus-visible{outline:2px solid var(--focus); outline-offset:2px;}
-  .save-flag{font-size:0.74rem; color:var(--ink-faint); font-family:"IBM Plex Mono",monospace;}
   footer.note{font-size:0.76rem; color:var(--ink-faint); text-align:center; padding-top:10px;}
 
   @media (max-width:760px){
@@ -185,12 +208,17 @@
   @media (prefers-reduced-motion: reduce){*{transition:none !important;}}
 </style>
 
+<div class="savebar" id="savebar">
+  <span class="save-status" id="save-status">Modifications enregistrées automatiquement dans ce navigateur.</span>
+  <button class="btn-save" id="save-btn" type="button">Enregistrer les modifications</button>
+</div>
+
 <div class="wrap">
 
   <header class="top">
     <div class="titleblock">
       <h1>Grille tarifaire — Yes Conciergerie</h1>
-      <p>Prix d'achat (coût prestataire) → prix de revente (facturé au franchisé). Tout est modifiable : montants, libellés, et vous pouvez ajouter ou supprimer des lignes de frais. Les changements sont enregistrés dans ce navigateur.</p>
+      <p>Prix d'achat (coût prestataire) → prix de revente (facturé au franchisé). Tout est modifiable : montants, libellés, et vous pouvez ajouter ou supprimer des lignes de frais.</p>
     </div>
     <div class="source-tag">Source : Propale Tarifaire · benchmark-franchises-france-2026.html</div>
   </header>
@@ -257,7 +285,6 @@
       <span>Prix d'achat vide = N/A (pas de prestataire externe identifié)</span>
       <span style="flex:1"></span>
       <div class="actions">
-        <span class="save-flag" id="save-flag"></span>
         <button class="reset" id="reset-btn" type="button">Réinitialiser les valeurs</button>
       </div>
     </div>
@@ -350,11 +377,25 @@
         hyp: state.hyp
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(clean));
-      const flag = document.getElementById("save-flag");
-      flag.textContent = "Enregistré à " + new Date().toLocaleTimeString("fr-FR");
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(()=>{ flag.textContent = ""; }, 3000);
+      const status = document.getElementById("save-status");
+      status.textContent = "Enregistré à " + new Date().toLocaleTimeString("fr-FR");
     }catch(e){ /* localStorage unavailable in this context */ }
+  }
+
+  function manualSave(){
+    persist();
+    const status = document.getElementById("save-status");
+    const btn = document.getElementById("save-btn");
+    status.classList.add("just-saved");
+    btn.classList.add("just-saved");
+    const prevLabel = btn.textContent;
+    btn.textContent = "✓ Enregistré";
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(()=>{
+      status.classList.remove("just-saved");
+      btn.classList.remove("just-saved");
+      btn.textContent = prevLabel;
+    }, 2000);
   }
 
   function rowById(section, id){ return state[section].find(r=>r.id===id); }
@@ -700,12 +741,14 @@
       btn.addEventListener("click", ()=> addRow(btn.dataset.section));
     });
 
+    document.getElementById("save-btn").addEventListener("click", manualSave);
+
     document.getElementById("reset-btn").addEventListener("click", ()=>{
       if(!confirm("Réinitialiser toutes les lignes et valeurs par défaut de la propale ? Vos modifications locales (y compris lignes ajoutées) seront perdues.")) return;
       try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
       state = freshDefaults();
       rebuildAll();
-      document.getElementById("save-flag").textContent = "Réinitialisé";
+      document.getElementById("save-status").textContent = "Réinitialisé — valeurs par défaut restaurées.";
     });
 
     window.addEventListener("resize", ()=> drawChart(computeProjection()));
