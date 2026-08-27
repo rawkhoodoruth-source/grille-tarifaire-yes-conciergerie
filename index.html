@@ -277,20 +277,6 @@
           <th class="num">Marge €</th><th class="num">Marge %</th><th>Note</th><th class="actions-col"></th>
         </tr></thead>
         <tbody></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="4">Total charges fixes obligatoires an 1&nbsp;&amp;&nbsp;2 <span style="font-weight:400;color:var(--ink-muted);">(plancher + marketing + community mgmt + maintenance)</span></td>
-            <td class="num" id="total-fixe-an12">—</td><td></td>
-          </tr>
-          <tr>
-            <td>Total récurrent annualisé <span style="font-weight:400;color:var(--ink-muted);">(hors lignes % CA)</span></td>
-            <td class="num" id="rec-total-revente">—</td>
-            <td class="num" id="rec-total-achat">—</td>
-            <td class="num" id="rec-total-marge">—</td>
-            <td class="num" id="rec-total-margepct">—</td>
-            <td></td><td></td>
-          </tr>
-        </tfoot>
       </table>
     </div>
     <div class="add-row-bar"><button class="btn-add" type="button" data-section="recurrent">+ Ajouter une ligne récurrente</button></div>
@@ -747,7 +733,6 @@
     const fixedTotal = g("recurrent","plancher12","revente",0) + g("recurrent","redevance_mkt","revente",0)
       + g("recurrent","community_mgmt","revente",0)*12 + g("recurrent","maintenance","revente",0);
     document.getElementById("kpi-fixe").textContent = fmtEUR(fixedTotal);
-    document.getElementById("total-fixe-an12").textContent = fmtEUR(fixedTotal);
 
     const osMarge = state.oneshot.reduce((s,r)=> s + (marginOf(r) || 0), 0);
     document.getElementById("kpi-marge-os").textContent = fmtEUR(osMarge);
@@ -762,14 +747,6 @@
     document.getElementById("os-total-achat").textContent = fmtEUR(osAchat);
     document.getElementById("os-total-marge").textContent = fmtEUR(osMarge);
     document.getElementById("os-total-margepct").textContent = osRevente ? fmtPct(osMarge/osRevente) : "—";
-
-    // ---- Totals row: recurrent table (annualized, lignes en formule/% ignorées) ----
-    const recRevente = state.recurrent.reduce((s,r)=> s + (parseNumeric(r.revente) || 0) * (r.annualize || 1), 0);
-    const recAchat = state.recurrent.reduce((s,r)=> s + (parseNumeric(r.achat) || 0) * (r.annualize || 1), 0);
-    document.getElementById("rec-total-revente").textContent = fmtEUR(recRevente);
-    document.getElementById("rec-total-achat").textContent = fmtEUR(recAchat);
-    document.getElementById("rec-total-marge").textContent = fmtEUR(recMarge);
-    document.getElementById("rec-total-margepct").textContent = recRevente ? fmtPct(recMarge/recRevente) : "—";
 
     const proj = computeProjection();
     fillResultGrid(proj);
